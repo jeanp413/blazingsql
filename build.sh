@@ -47,7 +47,7 @@ BUILD_DIRS="${IO_BUILD_DIR} ${COMMS_BUILD_DIR} ${LIBENGINE_BUILD_DIR}"
 # Set defaults for vars modified by flags to this script
 VERBOSE=""
 QUIET="--quiet"
-BUILD_TYPE=Release
+BUILD_TYPE=RelWithDebInfo   
 INSTALL_TARGET=install
 TESTS="ON"
 
@@ -242,4 +242,3 @@ if buildAll || hasArg algebra; then
         cp blazingdb-calcite-core/target/blazingdb-calcite-core.jar $INSTALL_PREFIX/lib/blazingsql-algebra-core.jar
     fi
 fi
-
