@@ -6,6 +6,7 @@
 #include "CacheMachine.h"
 #include "io/Schema.h"
 #include "utilities/CommonOperations.h"
+#include "utilities/DebuggingUtils.h"
 #include "communication/CommunicationData.h"
 #include "execution_graph/logic_controllers/LogicalFilter.h"
 #include "distribution/primitives.h"
@@ -206,9 +207,9 @@ public:
 			}
 			bool strict = true;
 			this->join_column_common_types = ral::utilities::get_common_types(left_join_types, right_join_types, strict);
-			this->normalize_left = !std::equal(this->join_column_common_types.cbegin(), this->join_column_common_types.cend(), 
+			this->normalize_left = !std::equal(this->join_column_common_types.cbegin(), this->join_column_common_types.cend(),
 														left_join_types.cbegin(), left_join_types.cend());
-			this->normalize_right = !std::equal(this->join_column_common_types.cbegin(), this->join_column_common_types.cend(), 
+			this->normalize_right = !std::equal(this->join_column_common_types.cbegin(), this->join_column_common_types.cend(),
 														right_join_types.cbegin(), right_join_types.cend());
 		}
 		if (this->normalize_left){
@@ -373,7 +374,24 @@ public:
 					auto log_input_num_rows = left_batch->num_rows() + right_batch->num_rows();
 					auto log_input_num_bytes = left_batch->sizeInBytes() + right_batch->sizeInBytes();
 
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BEFORE JOIN LEFT:\n" + ral::utilities::print_blazing_table_view_schema(left_batch->toBlazingTableView()));
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BEFORE JOIN RIGHT:\n" + ral::utilities::print_blazing_table_view_schema(right_batch->toBlazingTableView()));
+
 					std::unique_ptr<ral::frame::BlazingTable> joined = join_set(left_batch->toBlazingTableView(), right_batch->toBlazingTableView());
+
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "AFTER JOIN:\n" + ral::utilities::print_blazing_table_view_schema(joined->toBlazingTableView()));
 
 					auto log_output_num_rows = joined->num_rows();
 					auto log_output_num_bytes = joined->sizeInBytes();
@@ -816,7 +834,7 @@ public:
 
 		std::unique_ptr<ral::frame::BlazingTable> left_batch = left_sequence.next();
 		std::unique_ptr<ral::frame::BlazingTable> right_batch = right_sequence.next();
-		
+
 		if (left_batch == nullptr || left_batch->num_columns() == 0){
 			while (left_sequence.wait_for_next()){
 				left_batch = left_sequence.next();
@@ -835,7 +853,7 @@ public:
 										"duration"_a="",
 										"kernel_id"_a=this->get_id());
 			throw err;
-		} 
+		}
 
 		std::pair<bool, bool> scatter_left_right;
 		if (this->join_type == OUTER_JOIN){ // cant scatter a full outer join

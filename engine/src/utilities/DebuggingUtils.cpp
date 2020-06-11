@@ -1,9 +1,10 @@
-//Recibir blazingTable
-//Imprimir Nombre, Tamanho, Data
-
 #include "DebuggingUtils.h"
+#include <sstream>
 #include <cudf/utilities/type_dispatcher.hpp>
 #include <cudf/strings/string_view.cuh>
+#include <cudf/wrappers/timestamps.hpp>
+#include <cudf/reduction.hpp>
+#include <cudf/aggregation.hpp>
 #include <from_cudf/cpp_tests/utilities/column_utilities.hpp>
 
 namespace ral {
@@ -30,6 +31,80 @@ std::string type_string(cudf::data_type dtype) {
 	}
 }
 
+std::string to_string(cudf::scalar & scalar){
+	std::string ret;
+	if (!scalar.is_valid()) {
+		return ret;
+	}
+	cudf::data_type type = scalar.type();
+	if(type.id() == cudf::type_id::BOOL8) {
+		using T = bool;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::INT8) {
+		using T = int8_t;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::INT16) {
+		using T = int16_t;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::INT32) {
+		using T = int32_t;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::INT64) {
+		using T = int64_t;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::FLOAT32) {
+		using T = float;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::FLOAT64) {
+		using T = double;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).value());
+	}
+	if(type.id() == cudf::type_id::TIMESTAMP_DAYS) {
+		using T = cudf::timestamp_D;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).ticks_since_epoch());
+	}
+	if(type.id() == cudf::type_id::TIMESTAMP_SECONDS) {
+		using T = cudf::timestamp_s;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).ticks_since_epoch());
+	}
+	if(type.id() == cudf::type_id::TIMESTAMP_MILLISECONDS) {
+		using T = cudf::timestamp_ms;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).ticks_since_epoch());
+	}
+	if(type.id() == cudf::type_id::TIMESTAMP_MICROSECONDS) {
+		using T = cudf::timestamp_us;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).ticks_since_epoch());
+	}
+	if(type.id() == cudf::type_id::TIMESTAMP_NANOSECONDS) {
+		using T = cudf::timestamp_ns;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = std::to_string(static_cast<ScalarType &>(scalar).ticks_since_epoch());
+	}
+	if(type.id() == cudf::type_id::STRING) {
+		using T = cudf::string_view;
+		using ScalarType = cudf::scalar_type_t<T>;
+		ret = static_cast<ScalarType &>(scalar).to_string();
+	}
+	return ret;
+}
+
 void print_blazing_table_view(ral::frame::BlazingTableView table_view, const std::string table_name){
 	std::cout<<"Table: "<<table_name<<std::endl;
 	std::cout<<"\t"<<"Num Rows: "<<table_view.num_rows()<<std::endl;
@@ -43,13 +118,25 @@ void print_blazing_table_view(ral::frame::BlazingTableView table_view, const std
 	}
 }
 
-void print_blazing_table_view_schema(ral::frame::BlazingTableView table_view, const std::string table_name){
-	std::cout<<"Table: "<<table_name<<std::endl;
-	std::cout<<"\t"<<"Num Rows: "<<table_view.num_rows()<<std::endl;
-	std::cout<<"\t"<<"Num Columns: "<<table_view.num_columns()<<std::endl;
-	for(size_t col_idx=0; col_idx<table_view.num_columns(); col_idx++){
-		std::cout<<"\t"<<table_view.names().at(col_idx)<<" ("<<"type: "<<type_string(table_view.column(col_idx).type())<<")"<<std::endl;
+std::string print_blazing_table_view_schema(ral::frame::BlazingTableView table_view, const std::string table_name){
+	std::ostringstream out;
+	out << "Table: "<< table_name << "\n";
+	out << "\t" << "Num Rows: " << table_view.num_rows() << "\n";
+	out << "\t" << "Num Columns: " << table_view.num_columns() << "\n";
+	for(size_t col_idx = 0; col_idx < table_view.num_columns(); col_idx++){
+		auto column = table_view.column(col_idx);
+		auto max_result = cudf::reduce(column, cudf::make_max_aggregation(), column.type());
+		auto min_result = cudf::reduce(column, cudf::make_min_aggregation(), column.type());
+		out << "\t"<< table_view.names().at(col_idx)
+				<< " ("
+				<< "type: " << type_string(column.type())
+				<< " null_count: " << column.null_count()
+				<< " min: " << to_string(*min_result)
+				<< " max: " << to_string(*max_result)
+				<< ")"
+				<< "\n";
 	}
+	return out.str();
 }
 
 }  // namespace utilities
