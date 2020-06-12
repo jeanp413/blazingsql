@@ -359,6 +359,17 @@ public:
 					CodeTimer eventTimer(false);
 					eventTimer.start();
 
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BEFORE NORMALIZE JOIN LEFT:\n" + ral::utilities::print_blazing_table_view_schema(left_batch->toBlazingTableView()));
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BEFORE NORMALIZE JOIN RIGHT:\n" + ral::utilities::print_blazing_table_view_schema(right_batch->toBlazingTableView()));
+
 					if (this->normalize_left){
 						ral::utilities::normalize_types(left_batch, this->join_column_common_types, this->left_column_indices);
 					}

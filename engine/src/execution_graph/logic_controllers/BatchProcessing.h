@@ -593,6 +593,12 @@ public:
 				auto log_input_num_rows = batch ? batch->num_rows() : 0;
 				auto log_input_num_bytes = batch ? batch->sizeInBytes() : 0;
 
+				logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a=this->get_id(),
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BEFORE PROJECTION:\n" + ral::utilities::print_blazing_table_view_schema(batch->toBlazingTableView()));
+
 				eventTimer.start();
 				auto columns = ral::processor::process_project(std::move(batch), expression, context.get());
 				eventTimer.stop();
@@ -612,6 +618,12 @@ public:
 									"event_type"_a="compute",
 									"timestamp_begin"_a=eventTimer.start_time(),
 									"timestamp_end"_a=eventTimer.end_time());
+
+					logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a=this->get_id(),
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "AFTER PROJECTION:\n" + ral::utilities::print_blazing_table_view_schema(columns->toBlazingTableView()));
 				}
 
 				this->add_to_output_cache(std::move(columns));
