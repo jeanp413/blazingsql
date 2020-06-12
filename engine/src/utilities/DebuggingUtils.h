@@ -6,6 +6,8 @@
 namespace ral {
 namespace utilities {
 
+std::string type_string(cudf::data_type dtype);
+
 void print_blazing_table_view(ral::frame::BlazingTableView table_view, const std::string table_name="");
 
 std::string print_blazing_table_view_schema(ral::frame::BlazingTableView table_view, const std::string table_name="");

@@ -6,12 +6,12 @@
 #include "utilities/CommonOperations.h"
 #include "utilities/StringUtils.h"
 #include <CodeTimer.h>
-#include <blazingdb/io/Library/Logging/Logger.h>
 #include "blazingdb/concurrency/BlazingThread.h"
 #include <cudf/filling.hpp>
 #include <cudf/column/column_factories.hpp>
 #include "CalciteExpressionParsing.h"
 #include "execution_graph/logic_controllers/LogicalFilter.h"
+#include "utilities/DebuggingUtils.h"
 
 #include <spdlog/spdlog.h>
 using namespace fmt::literals;
@@ -47,9 +47,9 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 		column_indices.resize(schema.get_num_columns());
 		std::iota(column_indices.begin(), column_indices.end(), 0);
 	}
-	
+
 	// this is the fileSchema we want to send to parse_batch since they only the columns and row_groups we want to get from a file or gdf as opposed to hive
-	auto fileSchema = schema.fileSchema(file_index); 
+	auto fileSchema = schema.fileSchema(file_index);
 
 	if (schema.all_in_file()){
 		std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices, row_group_ids);
@@ -61,7 +61,7 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 				column_indices_in_file.push_back(column_indices[i]);
 			}
 		}
-		
+
 		std::vector<std::unique_ptr<cudf::column>> all_columns(column_indices.size());
 		std::vector<std::unique_ptr<cudf::column>> file_columns;
 		std::vector<std::string> names;
@@ -72,12 +72,14 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 			std::unique_ptr<CudfTable> current_table = current_blazing_table->releaseCudfTable();
 			num_rows = current_table->num_rows();
 			file_columns = current_table->release();
-		
+
 		} else { // all tables we are "loading" are from hive partitions, so we dont know how many rows we need unless we load something to get the number of rows
 			std::vector<size_t> temp_column_indices = {0};
 			std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, temp_column_indices, row_group_ids);
 			num_rows = loaded_table->num_rows();
 		}
+
+		std::shared_ptr<spdlog::logger> logger = spdlog::get("batch_logger");
 
 		int in_file_column_counter = 0;
 		for(int i = 0; i < column_indices.size(); i++) {
@@ -89,6 +91,17 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 				std::string literal_str = file_data_handle.column_values[name];
 				std::unique_ptr<cudf::scalar> scalar = get_scalar_from_string(literal_str, cudf::data_type{type});
 				all_columns[i] = cudf::make_column_from_scalar(*scalar, num_rows);
+
+				logger->trace("{query_id}|{step}|{substep}|{info}|{duration}|kernel_id|{kernel_id}||",
+											"query_id"_a="",
+											"step"_a="",
+											"substep"_a="",
+											"info"_a=R"(
+>> In load_batch:
+	name: {}
+	value: {}
+	type: {}
+)"_format(name, literal_str, ral::utilities::type_string(cudf::data_type{type})));
 			} else {
 				all_columns[i] = std::move(file_columns[in_file_column_counter]);
 				in_file_column_counter++;

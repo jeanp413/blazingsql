@@ -464,6 +464,13 @@ public:
 
 				while(batch = input.next()) {
 					try {
+
+						logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a=this->get_id(),
+												"step"_a="",
+												"substep"_a="",
+												"info"_a= "BindableTableScan:\n" + ral::utilities::print_blazing_table_view_schema(batch->toBlazingTableView()));
+
 						eventTimer.start();
 						auto log_input_num_rows = batch->num_rows();
 						auto log_input_num_bytes = batch->sizeInBytes();
