@@ -57,7 +57,7 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 												"query_id"_a="",
 												"step"_a="",
 												"substep"_a="",
-												"info"_a=">> In load_batch:\n\tall schema in file");
+												"info"_a=">> In load_batch: all schema in file " + file_data_handle.uri.toString());
 
 		std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices, row_group_ids);
 		return std::move(loaded_table);
@@ -102,11 +102,11 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 											"step"_a="",
 											"substep"_a="",
 											"info"_a=R"(
->> In load_batch:
+>> In load_batch: {}
 	name: {}
 	value: {}
 	type: {}
-)"_format(name, literal_str, ral::utilities::type_string(cudf::data_type{type})));
+)"_format(file_data_handle.uri.toString(), name, literal_str, ral::utilities::type_string(cudf::data_type{type})));
 			} else {
 				all_columns[i] = std::move(file_columns[in_file_column_counter]);
 				in_file_column_counter++;
