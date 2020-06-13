@@ -51,13 +51,15 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 
 	// this is the fileSchema we want to send to parse_batch since they only the columns and row_groups we want to get from a file or gdf as opposed to hive
 	auto fileSchema = schema.fileSchema(file_index);
+	auto files_ = fileSchema.get_files();
+	std::string file_ = !files_.empty() ? files_[0] : "";
 
 	if (schema.all_in_file()){
 			logger->trace("{query_id}|{step}|{substep}|{info}|||||",
 												"query_id"_a="",
 												"step"_a="",
 												"substep"_a="",
-												"info"_a=">> In load_batch: all schema in file " + file_data_handle.uri.toString());
+												"info"_a=">> In load_batch: all schema in file " + file_);
 
 		std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices, row_group_ids);
 		return std::move(loaded_table);
@@ -106,7 +108,7 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 	name: {}
 	value: {}
 	type: {}
-)"_format(file_data_handle.uri.toString(), name, literal_str, ral::utilities::type_string(cudf::data_type{type})));
+)"_format(file_, name, literal_str, ral::utilities::type_string(cudf::data_type{type})));
 			} else {
 				all_columns[i] = std::move(file_columns[in_file_column_counter]);
 				in_file_column_counter++;
