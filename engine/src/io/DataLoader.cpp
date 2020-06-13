@@ -41,6 +41,7 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 	data_handle file_data_handle,
 	size_t file_index,
 	std::vector<cudf::size_type> row_group_ids) {
+	std::shared_ptr<spdlog::logger> logger = spdlog::get("batch_logger");
 
 	std::vector<size_t> column_indices = column_indices_in;
 	if (column_indices.size() == 0) {  // including all columns by default
@@ -52,6 +53,12 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 	auto fileSchema = schema.fileSchema(file_index);
 
 	if (schema.all_in_file()){
+			logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a=">> In load_batch:\n\tall schema in file");
+
 		std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices, row_group_ids);
 		return std::move(loaded_table);
 	} else {
@@ -78,8 +85,6 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 			std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, temp_column_indices, row_group_ids);
 			num_rows = loaded_table->num_rows();
 		}
-
-		std::shared_ptr<spdlog::logger> logger = spdlog::get("batch_logger");
 
 		int in_file_column_counter = 0;
 		for(int i = 0; i < column_indices.size(); i++) {
