@@ -41,6 +41,7 @@ import netifaces as ni
 import random
 
 import logging
+import json
 
 from enum import IntEnum
 
@@ -1241,9 +1242,9 @@ class BlazingContext(object):
                 return
 
         if user_partitions is not None:
-            logging.info('>>>> Partitions are: ' + user_partitions)
+            logging.info('>>>> Partitions are: ' + json.dumps(user_partitions))
         if user_partitions_schema is not None:
-            logging.info('>>>> Partitions scheme is: ' + user_partitions_schema)
+            logging.info('>>>> Partitions scheme is: ' + json.dumps(user_partitions_schema))
 
         if(isinstance(input, hive.Cursor)):
             hive_table_name = kwargs.get('hive_table_name', table_name)
