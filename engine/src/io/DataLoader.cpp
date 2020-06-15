@@ -99,7 +99,7 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 				std::unique_ptr<cudf::scalar> scalar = get_scalar_from_string(literal_str, cudf::data_type{type});
 				all_columns[i] = cudf::make_column_from_scalar(*scalar, num_rows);
 
-				logger->trace("{query_id}|{step}|{substep}|{info}|{duration}|kernel_id|{kernel_id}||",
+				logger->trace("{query_id}|{step}|{substep}|{info}|||||",
 											"query_id"_a="",
 											"step"_a="",
 											"substep"_a="",
