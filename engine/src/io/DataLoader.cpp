@@ -55,12 +55,6 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 	std::string file_ = !files_.empty() ? files_[0] : "";
 
 	if (schema.all_in_file()){
-			logger->trace("{query_id}|{step}|{substep}|{info}|||||",
-												"query_id"_a="",
-												"step"_a="",
-												"substep"_a="",
-												"info"_a=">> In load_batch: all schema in file " + file_);
-
 		std::unique_ptr<ral::frame::BlazingTable> loaded_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices, row_group_ids);
 		return std::move(loaded_table);
 	} else {
@@ -76,6 +70,12 @@ std::unique_ptr<ral::frame::BlazingTable> data_loader::load_batch(
 		std::vector<std::string> names;
 		cudf::size_type num_rows;
 		if (column_indices_in_file.size() > 0){
+			logger->trace("{query_id}|{step}|{substep}|{info}|||||",
+												"query_id"_a="",
+												"step"_a="",
+												"substep"_a="",
+												"info"_a=">> In load_batch: all schema in file " + file_);
+
 			std::unique_ptr<ral::frame::BlazingTable> current_blazing_table = parser->parse_batch(file_data_handle.fileHandle, fileSchema, column_indices_in_file, row_group_ids);
 			names = current_blazing_table->names();
 			std::unique_ptr<CudfTable> current_table = current_blazing_table->releaseCudfTable();

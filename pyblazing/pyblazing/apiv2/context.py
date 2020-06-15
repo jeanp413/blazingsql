@@ -97,7 +97,7 @@ class blazing_allocation_mode(IntEnum):
 
 def initializeBlazing(ralId=0, networkInterface='lo', singleNode=False,
                       allocator="managed", pool=False,
-                      initial_pool_size=None, enable_logging=False, 
+                      initial_pool_size=None, enable_logging=False,
                       devices=0, config_options={}, logging_dir_path='blazing_log'):
 
     FORMAT='%(asctime)s|' + str(ralId) + '|%(levelname)s|||"%(message)s"||||||'
@@ -149,7 +149,7 @@ def initializeBlazing(ralId=0, networkInterface='lo', singleNode=False,
         ralCommunicationPort,
         singleNode,
         config_options)
-    
+
     if (os.path.isabs(logging_dir_path)):
         log_path = logging_dir_path
     else:
@@ -588,7 +588,7 @@ def adjust_due_to_missing_rowgroups(metadata, files):
 
 def distributed_initialize_logging_directory(client, logging_dir_path):
 
-    # lets make host_list which is a list of all the unique hosts. 
+    # lets make host_list which is a list of all the unique hosts.
     # This way we do the logging folder creation only once per host (server)
     host_list = list(set([value['host'] for key,value in client.scheduler_info()["workers"].items()]))
     initialized = {}
@@ -604,10 +604,10 @@ def distributed_initialize_logging_directory(client, logging_dir_path):
                     logging_dir_path,
                     workers=[worker]))
             initialized[worker_info['host']] = True
-    
+
     for connection in dask_futures:
         made_dir = connection.result()
-    
+
 
 def initialize_logging_directory(logging_dir_path):
     if (not os.path.exists(logging_dir_path)):
@@ -615,7 +615,7 @@ def initialize_logging_directory(logging_dir_path):
         return True
     else:
         return False
-        
+
 
 class BlazingTable(object):
     def __init__(
@@ -753,7 +753,7 @@ class BlazingTable(object):
             if self.row_groups_ids is not None:
                 slice_row_groups_ids=self.row_groups_ids[startIndex: startIndex + batchSize]
 
-            bt = BlazingTable(self.name, 
+            bt = BlazingTable(self.name,
                                 self.input,
                                 self.fileType,
                                 files=tempFiles,
@@ -835,10 +835,10 @@ class BlazingContext(object):
                                             will consider to be full. In the presence of several GPUs per server, this resource will be shared among all of
                                             them in equal parts.
                                             NOTE: This parameter only works when used in the BlazingContext
-                                            default: 0.75 
+                                            default: 0.75
                                     BLAZING_LOGGING_DIRECTORY : A folder path to place all logging files. The path can be relative or absolute.
                                             NOTE: This parameter only works when used in the BlazingContext
-                                            default: 'blazing_log'                               
+                                            default: 'blazing_log'
 
         Examples
         --------
@@ -875,7 +875,7 @@ class BlazingContext(object):
         self.config_options = {}
         for option in config_options:
             self.config_options[option.encode()] = str(config_options[option]).encode() # make sure all options are encoded strings
-        
+
         logging_dir_path = 'blazing_log'
         if ('BLAZING_LOGGING_DIRECTORY' in config_options): # want to use config_options and not self.config_options since its not encoded
             logging_dir_path = config_options['BLAZING_LOGGING_DIRECTORY']
@@ -885,7 +885,7 @@ class BlazingContext(object):
             self.config_options["BLAZING_HOST_MEM_RESOURCE_CONSUMPTION_THRESHOLD".encode()] = str(host_memory_quota).encode()
 
         if(dask_client is not None):
-            distributed_initialize_logging_directory(self.dask_client, logging_dir_path) 
+            distributed_initialize_logging_directory(self.dask_client, logging_dir_path)
 
             if network_interface is None:
                 network_interface = 'eth0'
@@ -928,10 +928,10 @@ class BlazingContext(object):
                 self.node_log_paths.append(log_path)
                 i = i + 1
 
-            
-            # need to initialize this logging independently, in case its set as a relative path 
+
+            # need to initialize this logging independently, in case its set as a relative path
             # and the location from where the python script is running is different than the local dask workers
-            initialize_logging_directory(logging_dir_path) 
+            initialize_logging_directory(logging_dir_path)
             # this one is for the non dask side
             FORMAT='%(asctime)s||%(levelname)s|||"%(message)s"||||||'
             filename = os.path.join(logging_dir_path, 'pyblazing.log')
@@ -1240,6 +1240,11 @@ class BlazingContext(object):
                 logging.error("ERROR: The number of columns in 'partitions' should be the same as 'partitions_schema'")
                 return
 
+        if user_partitions is not None:
+            logging.info('>>>> Partitions are: ' + user_partitions)
+        if user_partitions_schema is not None:
+            logging.info('>>>> Partitions scheme is: ' + user_partitions_schema)
+
         if(isinstance(input, hive.Cursor)):
             hive_table_name = kwargs.get('hive_table_name', table_name)
             hive_database_name = kwargs.get('hive_database_name', 'default')
@@ -1532,7 +1537,7 @@ class BlazingContext(object):
                     row_groups_ids.append(row_group_ids)
 
             if self.dask_client is None:
-                bt = BlazingTable(current_table.name, 
+                bt = BlazingTable(current_table.name,
                                 current_table.input,
                                 current_table.fileType,
                                 files=actual_files,
@@ -1550,7 +1555,7 @@ class BlazingContext(object):
                 if single_gpu:
                     all_sliced_files, all_sliced_uri_values, all_sliced_row_groups_ids = self._sliceRowGroups(1, actual_files, uri_values, row_groups_ids)
                     i = 0
-                    bt = BlazingTable(current_table.name, 
+                    bt = BlazingTable(current_table.name,
                                 current_table.input,
                                 current_table.fileType,
                                 files=all_sliced_files[i],
@@ -1568,7 +1573,7 @@ class BlazingContext(object):
                     all_sliced_files, all_sliced_uri_values, all_sliced_row_groups_ids = self._sliceRowGroups(len(self.nodes), actual_files, uri_values, row_groups_ids)
 
                     for i, node in enumerate(self.nodes):
-                        bt = BlazingTable(current_table.name, 
+                        bt = BlazingTable(current_table.name,
                                     current_table.input,
                                     current_table.fileType,
                                     files=all_sliced_files[i],
@@ -1606,9 +1611,9 @@ class BlazingContext(object):
     >>> bc.create_table('product_reviews', "product_reviews/*.parquet")
     >>> query_1= "SELECT pr_item_sk, pr_review_content, pr_review_sk FROM product_reviews where pr_review_content IS NOT NULL"
     >>> product_reviews_df = bc.sql(query_1)
-    >>> product_reviews_df = bc.partition(product_reviews_df, 
-                                by=["pr_item_sk", 
-                                    "pr_review_content", 
+    >>> product_reviews_df = bc.partition(product_reviews_df,
+                                by=["pr_item_sk",
+                                    "pr_review_content",
                                     "pr_review_sk"])
     >>> sentences = product_reviews_df.map_partitions(create_sentences_from_reviews)
 
@@ -1744,13 +1749,13 @@ class BlazingContext(object):
 
         # this was for ARROW tables which are currently deprecated
         # algebra = modifyAlgebraForDataframesWithOnlyWantedColumns(algebra, relational_algebra_steps,self.tables)
-        
+
         for table_idx, query_table in enumerate(query_tables):
             fileTypes.append(query_table.fileType)
             ftype = query_table.fileType
             if(ftype == DataType.PARQUET or ftype == DataType.ORC or ftype == DataType.JSON or ftype == DataType.CSV):
                 if query_table.has_metadata():
-                    currentTableNodes = self._optimize_with_skip_data_getSlices(query_table, table_scans[table_idx], single_gpu)                    
+                    currentTableNodes = self._optimize_with_skip_data_getSlices(query_table, table_scans[table_idx], single_gpu)
                 else:
                     if single_gpu == True:
                         currentTableNodes = query_table.getSlices(1)
@@ -1934,7 +1939,7 @@ class BlazingContext(object):
 
             for log_table_name in log_schemas:
                 log_files = [os.path.join(self.node_log_paths[i], log_table_name + '.' + str(i) + '.log') for i in range(0, len(self.node_log_paths))]
-                
+
                 names, dtypes = log_schemas[log_table_name]
                 t = self.create_table(
                     log_table_name,
