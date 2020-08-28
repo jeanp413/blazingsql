@@ -21,8 +21,8 @@ std::vector<char> to_byte_vector(T input) {
 }
 
 template <typename T>
-std::vector<char> vector_to_byte_vector(std::vector<T> input) {
-	char * byte_pointer = reinterpret_cast<char *>(input.data());
+std::vector<char> vector_to_byte_vector(const std::vector<T> & input) {
+	const char * byte_pointer = reinterpret_cast<const char *>(input.data());
 	return std::vector<char>(byte_pointer, byte_pointer + (sizeof(T) * input.size()));
 }
 
@@ -40,7 +40,7 @@ std::vector<T> vector_from_byte_vector(const char * input, size_t length) {
 
 std::vector<char> serialize_metadata_and_transports(const ral::cache::MetadataDictionary & metadata,
 																										const std::vector<blazingdb::transport::ColumnTransport> & column_transports);
-std::pair<ral::cache::MetadataDictionary, std::vector<blazingdb::transport::ColumnTransport>> get_metadata_and_transports_from_bytes(std::vector<char> data);
+std::pair<ral::cache::MetadataDictionary, std::vector<blazingdb::transport::ColumnTransport>> get_metadata_and_transports_from_bytes(const std::vector<char> & data);
 
 } // namespace detail
 

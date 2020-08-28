@@ -29,7 +29,7 @@ std::vector<char> serialize_metadata_and_transports(const ral::cache::MetadataDi
 }
 
 std::pair<ral::cache::MetadataDictionary, std::vector<blazingdb::transport::ColumnTransport>>
-get_metadata_and_transports_from_bytes(std::vector<char> data){
+get_metadata_and_transports_from_bytes(const std::vector<char> & data){
     size_t ptr_offset = 0;
 	size_t metadata_buffer_size = from_byte_vector<size_t>(data.data());
 	ptr_offset += sizeof(size_t);

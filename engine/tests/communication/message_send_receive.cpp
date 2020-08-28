@@ -177,6 +177,8 @@ static thread_local ucp_context_h ucp_context;
 static thread_local ucp_worker_h ucp_worker;
 static thread_local ucp_ep_h ucp_conn_ep;
 
+static thread_local size_t request_size; // for ucp_tag_send/recv_nbr
+
 int create_ucp_worker_and_ep(bool is_client) {
   ucp_test_mode_t ucp_test_mode = TEST_MODE_PROBE;
 
@@ -207,6 +209,9 @@ int create_ucp_worker_and_ep(bool is_client) {
   // ucp_config_print(config, stdout, NULL, UCS_CONFIG_PRINT_CONFIG);
   ucp_config_release(config);
   CHKERR_JUMP(status != UCS_OK, "ucp_init\n", err);
+
+  ucp_context_attr_t attr;
+  status = ucp_context_query(ucp_context, &attr);
 
   worker_params.field_mask  = UCP_WORKER_PARAM_FIELD_THREAD_MODE;
   worker_params.thread_mode = UCS_THREAD_MODE_SINGLE;
